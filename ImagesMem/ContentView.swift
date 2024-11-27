@@ -8,14 +8,20 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var viewModel = ImageListViewModel()
+
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationView {
+            List(viewModel.images) { imageItem in
+                NavigationLink(
+                    destination: FullScreenImageView(
+                        imageURL: imageItem.url, viewModel: viewModel)
+                ) {
+                    ImageRow(imageURL: imageItem.url, viewModel: viewModel)
+                }
+            }
+            .navigationTitle("Image List")
         }
-        .padding()
     }
 }
 
