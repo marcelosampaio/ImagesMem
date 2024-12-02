@@ -18,7 +18,7 @@ struct ImageRow: View {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 100, height: 100)
+                    .frame(width: 100, height: 150)
             } else {
                 ProgressView()
                     .frame(width: 100, height: 100)
@@ -26,10 +26,10 @@ struct ImageRow: View {
                         image = await viewModel.loadImage(url: imageURL)
                     }
             }
+            
             Text(imageURL)
                 .font(.footnote)
-                .lineLimit(1)
-                .truncationMode(.tail)
+
         }
     }
 }

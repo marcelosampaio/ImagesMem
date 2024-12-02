@@ -23,7 +23,6 @@ class ImageListViewModel: ObservableObject {
     }
 
     func loadImage(url: String) async -> UIImage? {
-        // Return cached image if available
         if let cachedImage = cachedImages[url] {
             return cachedImage
         }
