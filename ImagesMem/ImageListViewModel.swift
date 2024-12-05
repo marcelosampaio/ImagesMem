@@ -10,7 +10,8 @@ import SwiftUI
 @MainActor
 class ImageListViewModel: ObservableObject {
     @Published var images: [ImageItem] = []
-    @Published var cachedImages: [String: UIImage] = [:]
+    private let imageCache = NSCache<NSString, UIImage>()
+    private var inProgressTasks: [String: Task<UIImage?, Never>] = [:]
 
     init() {
         fetchImageURLs()
@@ -23,21 +24,31 @@ class ImageListViewModel: ObservableObject {
     }
 
     func loadImage(url: String) async -> UIImage? {
-        if let cachedImage = cachedImages[url] {
+        if let cachedImage = imageCache.object(forKey: url as NSString) {
             return cachedImage
         }
 
-        guard let imageURL = URL(string: url) else { return nil }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: imageURL)
-            if let image = UIImage(data: data) {
-                cachedImages[url] = image
-                return image
-            }
-        } catch {
-            print("Error downloading image: \(error)")
+        if let existingTask = inProgressTasks[url] {
+            return await existingTask.value
         }
-        return nil
+
+        let task = Task<UIImage?, Never> {
+            defer { inProgressTasks.removeValue(forKey: url) }
+
+            guard let imageURL = URL(string: url) else { return nil }
+            do {
+                let (data, _) = try await URLSession.shared.data(from: imageURL)
+                if let image = UIImage(data: data) {
+                    imageCache.setObject(image, forKey: url as NSString)
+                    return image
+                }
+            } catch {
+                print("Error downloading image: \(error)")
+            }
+            return nil
+        }
+
+        inProgressTasks[url] = task
+        return await task.value
     }
 }
